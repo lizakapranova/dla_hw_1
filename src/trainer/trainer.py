@@ -1,4 +1,10 @@
+from pathlib import Path
+
+import pandas as pd
+
+from src.logger.utils import plot_spectrogram
 from src.metrics.tracker import MetricTracker
+from src.metrics.utils import calc_cer, calc_wer
 from src.trainer.base_trainer import BaseTrainer
 
 
@@ -72,8 +78,51 @@ class Trainer(BaseTrainer):
 
         # logging scheme might be different for different partitions
         if mode == "train":  # the method is called only every self.log_step steps
-            # Log Stuff
-            pass
+            self.log_spectrogram(**batch)
         else:
             # Log Stuff
-            pass
+            self.log_spectrogram(**batch)
+            self.log_predictions(**batch)
+
+    def log_spectrogram(self, spectrogram, **batch):
+        spectrogram_for_plot = spectrogram[0].detach().cpu()
+        image = plot_spectrogram(spectrogram_for_plot)
+        self.writer.add_image("spectrogram", image)
+
+    def log_predictions(
+        self, text, log_probs, log_probs_length, audio_path, examples_to_log=10, **batch
+    ):
+        # Note: by improving text encoder and metrics design
+        # this logging can also be improved significantly
+
+        argmax_inds = log_probs.cpu().argmax(-1).numpy()
+        argmax_inds = [
+            inds[: int(ind_len)]
+            for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
+        ]
+        argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
+        argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
+        beam_serch_texts = [self.text_encoder.ctc_decode_beam_search(prob)[0]["hypothesis"] for prob in log_probs]
+        tuples = list(zip(argmax_texts, beam_serch_texts, text, argmax_texts_raw, audio_path))
+
+        rows = {}
+        for argmax_pred, beam_serch_pred, target, raw_pred, audio_path in tuples[:examples_to_log]:
+            target = self.text_encoder.normalize_text(target)
+            armax_wer = calc_wer(target, argmax_pred) * 100
+            argmax_cer = calc_cer(target, argmax_pred) * 100
+            beam_serch_wer = calc_wer(target, beam_serch_pred) * 100
+            beam_search_cer = calc_cer(target, beam_serch_pred) * 100
+
+            rows[Path(audio_path).name] = {
+                "target": target,
+                "raw prediction": raw_pred,
+                "argmax predictions": argmax_pred,
+                "beam search predictions": beam_serch_pred,
+                "argmax wer": armax_wer,
+                "argmax cer": argmax_cer,
+                "beam search wer": beam_serch_wer,
+                "beam search cer": beam_search_cer,
+            }
+        self.writer.add_table(
+            "predictions", pd.DataFrame.from_dict(rows, orient="index")
+        )
