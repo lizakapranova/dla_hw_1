@@ -1,6 +1,6 @@
 import re
-from string import ascii_lowercase
 from collections import defaultdict
+from string import ascii_lowercase
 
 import torch
 
@@ -69,36 +69,38 @@ class CTCTextEncoder:
             prev_ind = ind
         return "".join(decoded)
 
-    def ctc_decode_beam_search(self, probs) -> str:
+    def ctc_decode_beam_search(self, probs) -> list:
         dp = {"": 1.0}
         is_prev_empty = False
         for prob in probs:
             dp, is_prev_empty = self.expand_end_merge_path(dp, prob, is_prev_empty)
-            dp = self.truncate_paths(dp, self.beam_size)
+            dp = self.truncate_paths(dp)
         dp = [
             {"hypothesis": prefix, "probability": probability.item()}
-            for prefix, probability in sorted(dp.items(), key=lambda x: x[1], reverse=True)
+            for prefix, probability in sorted(
+                dp.items(), key=lambda x: x[1], reverse=True
+            )
         ]
         return dp
-    
+
     def expand_end_merge_path(self, dp, current_probs, is_prev_empty):
-        #TODO: add annotation
+        # TODO: add annotation
         new_dp = defaultdict(float)
         for ind, next_token_prob in enumerate(current_probs):
             cur_char = self.ind2char[ind]
             for prefix, prev_probs in dp.items():
-                last_char = prefix[-1] if prefix else ''
+                last_char = prefix[-1] if prefix else ""
                 if is_prev_empty or (not is_prev_empty and cur_char == last_char):
                     new_prefix = prefix
                 else:
                     new_prefix = prefix + cur_char
 
-                is_next_empty = cur_char == self.EMPTY_TOK
+                is_prev_empty = cur_char == self.EMPTY_TOK
                 new_dp[new_prefix] += prev_probs * next_token_prob
-        return new_dp, is_next_empty
+        return new_dp, is_prev_empty
 
     def truncate_paths(self, dp):
-        #TODO: add annotation
+        # TODO: add annotation
         sorted_dp = sorted(dp.items(), key=lambda x: x[1], reverse=True)
         truncated_dp = sorted_dp[: self.beam_size]
         return dict(truncated_dp)
