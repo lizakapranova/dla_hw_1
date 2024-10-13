@@ -8,11 +8,9 @@ train:
     transforms:
       - _target_: src.transforms.wav_augs.Gain
         p: 0.5
-        output_type: 'dict'
       - _target_: src.transforms.wav_augs.PitchShift
         p: 0.7
         sample_rate: 16000
-        output_type: 'dict'
 inference:
   get_spectrogram:
     _target_: torchaudio.transforms.MelSpectrogram
