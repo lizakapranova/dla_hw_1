@@ -2,14 +2,14 @@ defaults:
   - model: deepspeech
   - metrics: all_metrics
   - datasets: onebatchtest # we do not want to run inference on training data
-  - dataloader: example
-  - transforms: example
+  - dataloader: onebatchtest
+  - transforms: inference
   - _self_
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
 inferencer:
-  device_tensors: ["data_object", "labels"] # which tensors should be on device (ex. GPU)
+  device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   device: auto # device name or "auto"
   save_path: "example" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "saved/model_best.pth" # path to the pretrained model
-text_encoder:
-  _target_: src.text_encoder.CTCTextEncoder
+  from_pretrained: "saved/testing/model_best.pth" # path to the pretrained model
