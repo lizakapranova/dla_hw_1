@@ -1,0 +1,5 @@
+_target_: src.model.DeepSpeech2
+n_feats: 128
+fc_hidden: 768
+rnn_layers: 5
+dropout: 0.0

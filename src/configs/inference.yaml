@@ -1,7 +1,7 @@
 defaults:
-  - model: baseline
-  - metrics: example
-  - datasets: example_eval # we do not want to run inference on training data
+  - model: deepspeech
+  - metrics: all_metrics
+  - datasets: onebatchtest # we do not want to run inference on training data
   - dataloader: example
   - transforms: example
   - _self_
@@ -11,3 +11,5 @@ inferencer:
   save_path: "example" # any name here, can be a dataset name
   seed: 1
   from_pretrained: "saved/model_best.pth" # path to the pretrained model
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder
