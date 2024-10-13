@@ -6,4 +6,4 @@ train:
         time_mask_param: 30
         p: 0.1
       - _target_: src.transforms.spec_augs.TimeStretch
-        fixed_rate: 1.2
+        n_freq: 5
