@@ -7,7 +7,6 @@ from src.metrics.base_metric import BaseMetric
 from src.metrics.utils import calc_wer
 from src.text_encoder import CTCTextEncoder
 
-# TODO beam search / LM versions
 # Note: they can be written in a pretty way
 # Note 2: overall metric design can be significantly improved
 
@@ -41,6 +40,8 @@ class BeamSearchWERMetric(BaseMetric):
         lengths = probs_length.detach().numpy()
         for prob, length, target_text in zip(probs_numpy, lengths, text):
             target_text = self.text_encoder.normalize_text(target_text)
-            pred_text = self.text_encoder.ctc_decode_beam_search(prob[:length])[0]["hypothesis"]
+            pred_text = self.text_encoder.ctc_decode_beam_search(prob[:length])[0][
+                "hypothesis"
+            ]
             wers.append(calc_wer(target_text, pred_text))
         return sum(wers) / len(wers)
