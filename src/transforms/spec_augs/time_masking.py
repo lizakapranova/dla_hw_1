@@ -2,7 +2,7 @@ import torchaudio.transforms
 from torch import Tensor, nn
 
 
-class TimeStretch(nn.Module):
+class TimeMasking(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self._time_masking = torchaudio.transforms.TimeMasking(*args, **kwargs)
