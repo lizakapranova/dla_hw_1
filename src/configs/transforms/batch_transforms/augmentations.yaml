@@ -5,5 +5,5 @@ train:
       - _target_: src.transforms.spec_augs.TimeMasking
         time_mask_param: 30
         p: 0.1
-      - _target_: src.transforms.spec_augs.TimeStretch
-        n_freq: 5
+      - _target_: src.transforms.spec_augs.Vol
+        gain: 1.3
