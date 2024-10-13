@@ -1,8 +1,8 @@
 defaults:
   - model: deepspeech
   - metrics: all_metrics
-  - datasets: onebatchtest # we do not want to run inference on training data
-  - dataloader: onebatchtest
+  - datasets: example # we do not want to run inference on training data
+  - dataloader: example
   - transforms: inference
   - _self_
 text_encoder:
@@ -12,4 +12,4 @@ inferencer:
   device: auto # device name or "auto"
   save_path: "example" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "saved/testing/model_best.pth" # path to the pretrained model
+  from_pretrained: "dla_asr/saved/testing/model_best.pth" # path to the pretrained model
